@@ -5,6 +5,10 @@ import com.example.simulator.config.SimulatorConfig;
 import com.example.simulator.grpc.Iso8583Proto;
 import com.example.simulator.grpc.Iso8583ServiceGrpc;
 import io.grpc.StatusRuntimeException;
+import io.opentelemetry.api.trace.Tracer;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.StatusCode;
+import io.opentelemetry.context.Scope;
 import net.devh.boot.grpc.client.inject.GrpcClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
@@ -28,6 +32,9 @@ public class TransactionSimulatorService {
 
     @Autowired
     private SimulatorConfig config;
+    
+    @Autowired
+    private Tracer tracer;
 
     private final Random random = new Random();
     private final AtomicInteger stanCounter = new AtomicInteger(1);
@@ -119,12 +126,25 @@ public class TransactionSimulatorService {
     }
     
     public void sendTransaction() {
-        totalTransactions.incrementAndGet();
+        Iso8583Message transaction = createRandomTransaction();
+        String stan = transaction.getField(11);
         
-        for (int attempt = 1; attempt <= config.getScheduled().getMaxRetries(); attempt++) {
-            try {
-                Iso8583Message transaction = createRandomTransaction();
-                String message = transaction.toString();
+        Span span = tracer.spanBuilder("iso8583.simulator.send_transaction")
+                .setAttribute("iso8583.stan", stan)
+                .setAttribute("iso8583.correlation_id", stan)
+                .startSpan();
+        
+        try (Scope scope = span.makeCurrent()) {
+            totalTransactions.incrementAndGet();
+            
+            for (int attempt = 1; attempt <= config.getScheduled().getMaxRetries(); attempt++) {
+                try {
+                    String message = transaction.toString();
+                    
+                    span.setAttribute("transaction.mti", transaction.getMti())
+                        .setAttribute("transaction.stan", stan)
+                        .setAttribute("transaction.amount", transaction.getField(4))
+                        .setAttribute("attempt", attempt);
                 
                 Iso8583Proto.TransactionRequest request = Iso8583Proto.TransactionRequest.newBuilder()
                         .setMessage(message)
@@ -135,28 +155,37 @@ public class TransactionSimulatorService {
                         .withDeadlineAfter(5, TimeUnit.SECONDS)
                         .sendTransaction(request);
                 
-                if (response.getSuccess()) {
-                    successfulTransactions.incrementAndGet();
-                    if (config.getMode() == SimulatorConfig.Mode.SCHEDULED) {
-                        System.out.println("✅ Transaction sent successfully");
+                    if (response.getSuccess()) {
+                        successfulTransactions.incrementAndGet();
+                        span.setStatus(StatusCode.OK);
+                        if (config.getMode() == SimulatorConfig.Mode.SCHEDULED) {
+                            System.out.println("✅ Transaction sent successfully");
+                        }
+                    } else {
+                        failedTransactions.incrementAndGet();
+                        span.setStatus(StatusCode.ERROR, "Transaction failed: " + response.getMessage());
+                        System.err.println("❌ Transaction failed: " + response.getMessage());
                     }
-                } else {
-                    failedTransactions.incrementAndGet();
-                    System.err.println("❌ Transaction failed: " + response.getMessage());
-                }
-                return;
+                    return;
                 
-            } catch (Exception e) {
-                failedTransactions.incrementAndGet();
-                if (attempt < config.getScheduled().getMaxRetries()) {
-                    try {
-                        Thread.sleep(config.getScheduled().getRetryDelayMs());
-                    } catch (InterruptedException ie) {
-                        Thread.currentThread().interrupt();
-                        return;
+                } catch (Exception e) {
+                    failedTransactions.incrementAndGet();
+                    span.setStatus(StatusCode.ERROR, "Exception: " + e.getMessage());
+                    if (attempt < config.getScheduled().getMaxRetries()) {
+                        try {
+                            Thread.sleep(config.getScheduled().getRetryDelayMs());
+                        } catch (InterruptedException ie) {
+                            Thread.currentThread().interrupt();
+                            return;
+                        }
                     }
                 }
             }
+        } catch (Exception e) {
+            span.setStatus(StatusCode.ERROR, e.getMessage());
+            throw e;
+        } finally {
+            span.end();
         }
     }
     

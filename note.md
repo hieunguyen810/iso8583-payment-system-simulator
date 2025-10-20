@@ -5,7 +5,7 @@
 - Client -> Server: File configuration (auto re-connect)
 - Simulator: support multiple request type
 - Profiling
-- Tracing
+- Tracing: OTLP
 
 #### K8s
 - Helm chart
@@ -24,6 +24,14 @@
 - Quality Gate
 - Push image to repo
 - Deploy
+
+#### Observability
+- Loki: receive logs
+- Alloy: receive trace, profile, get app logs
+- Grafana
+- Prometheus
+- Tempo
+- Spring Boot Actuator
 
 
 #### Database

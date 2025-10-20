@@ -69,11 +69,11 @@ otel.metrics.exporter=otlp
 ### View Connection Traces
 1. Create a connection via API
 2. Connect to server
-3. Check Jaeger UI for `iso8583.connection.connect` spans
+3. Check Tempo for `iso8583.connection.connect` spans
 
 ### Monitor Message Flow
 1. Send messages via API
-2. View traces in Jaeger showing complete request flow
+2. View traces in Tempo showing complete request flow
 3. Check Prometheus for message counters
 
 ### Kafka Integration Tracing

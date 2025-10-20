@@ -199,17 +199,22 @@ public class ConnectionService {
     private String requestTopic;
 
     public String[] sendMessage(String connectionId, String message) throws Exception {
+        // Parse message to get STAN for correlation
+        Iso8583Message parsedMsg = Iso8583Parser.parseMessage(message);
+        String stan = parsedMsg.getField(11) != null ? parsedMsg.getField(11) : "unknown";
+        
         Span span = tracer.spanBuilder("iso8583.message.send")
                 .setAttribute("connection.id", connectionId)
+                .setAttribute("iso8583.stan", stan)
+                .setAttribute("iso8583.correlation_id", stan)
                 .startSpan();
         
         try (Scope scope = span.makeCurrent()) {
-            // Parse and validate message
-            Iso8583Message parsedMsg = Iso8583Parser.parseMessage(message);
+            // Validate message
             ValidationResult validation = Iso8583Parser.validateMessage(parsedMsg);
             
             span.setAttribute("message.mti", parsedMsg.getMti())
-                .setAttribute("message.stan", parsedMsg.getField(11) != null ? parsedMsg.getField(11) : "unknown");
+                .setAttribute("message.stan", stan);
             
             if (!validation.isValid()) {
                 span.setStatus(StatusCode.ERROR, "Invalid message");
@@ -262,16 +267,29 @@ public class ConnectionService {
     }
 
     private String sendAndWaitForResponse(Channel channel, String message) throws Exception {
-        CompletableFuture<String> responseFuture = new CompletableFuture<>();
+        Span span = tracer.spanBuilder("iso8583.client.socket_send")
+                .setAttribute("channel.id", channel.id().asShortText())
+                .startSpan();
         
-        // Store the future in channel attributes for the handler to complete
-        channel.attr(AttributeKey.valueOf("responseFuture")).set(responseFuture);
-        
-        ByteBuf buf = channel.alloc().buffer();
-        buf.writeBytes(message.getBytes(StandardCharsets.UTF_8));
-        channel.writeAndFlush(buf);
-        
-        return responseFuture.get(10, TimeUnit.SECONDS);
+        try (Scope scope = span.makeCurrent()) {
+            CompletableFuture<String> responseFuture = new CompletableFuture<>();
+            
+            // Store the future in channel attributes for the handler to complete
+            channel.attr(AttributeKey.valueOf("responseFuture")).set(responseFuture);
+            
+            ByteBuf buf = channel.alloc().buffer();
+            buf.writeBytes(message.getBytes(StandardCharsets.UTF_8));
+            channel.writeAndFlush(buf);
+            
+            String response = responseFuture.get(10, TimeUnit.SECONDS);
+            span.setStatus(StatusCode.OK);
+            return response;
+        } catch (Exception e) {
+            span.setStatus(StatusCode.ERROR, e.getMessage());
+            throw e;
+        } finally {
+            span.end();
+        }
     }
 
     private class ClientHandler extends SimpleChannelInboundHandler<ByteBuf> {
@@ -284,7 +302,27 @@ public class ConnectionService {
         @Override
         protected void channelRead0(ChannelHandlerContext ctx, ByteBuf msg) {
             String message = msg.toString(StandardCharsets.UTF_8);
-            System.out.println("📨 Received from server: " + message);
+            
+            // Create span for received message
+            Span span = tracer.spanBuilder("iso8583.client.socket_receive")
+                    .setAttribute("channel.id", ctx.channel().id().asShortText())
+                    .startSpan();
+            
+            try (Scope scope = span.makeCurrent()) {
+                // Extract STAN for correlation
+                try {
+                    Iso8583Message parsedMsg = Iso8583Parser.parseMessage(message);
+                    String stan = parsedMsg.getField(11);
+                    if (stan != null) {
+                        span.setAttribute("iso8583.stan", stan)
+                            .setAttribute("iso8583.correlation_id", stan);
+                    }
+                    span.setAttribute("message.mti", parsedMsg.getMti());
+                } catch (Exception e) {
+                    // Continue if parsing fails
+                }
+                
+                System.out.println("📨 Received from server: " + message);
             
             // Check if this is a response to a pending request
             CompletableFuture<String> future = ctx.channel().attr(AttributeKey.<CompletableFuture<String>>valueOf("responseFuture")).get();
@@ -299,9 +337,16 @@ public class ConnectionService {
                 if (partitionKey == null) partitionKey = connectionId;
                 System.out.println("📤 Sending unsolicited message to Kafka with key: " + partitionKey);
                 kafkaTemplate.send(requestTopic, partitionKey, message);
-            } else {
-                // No authorization - just log the message
-                System.out.println("📝 Unsolicited message (no authorization): " + message);
+                } else {
+                    // No authorization - just log the message
+                    System.out.println("📝 Unsolicited message (no authorization): " + message);
+                }
+                
+                span.setStatus(StatusCode.OK);
+            } catch (Exception e) {
+                span.setStatus(StatusCode.ERROR, e.getMessage());
+            } finally {
+                span.end();
             }
         }
 

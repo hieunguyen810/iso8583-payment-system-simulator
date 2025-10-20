@@ -3,6 +3,8 @@ package com.example.client.controller;
 import com.example.client.model.ApiResponse;
 import com.example.client.model.ConnectionInfo;
 import com.example.client.service.ConnectionService;
+import com.example.common.model.Iso8583Message;
+import com.example.common.parser.Iso8583Parser;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.StatusCode;
@@ -81,13 +83,25 @@ public class Iso8583Controller {
 
     @PostMapping("/connections/{connectionId}/send")
     public ApiResponse sendMessage(@PathVariable String connectionId, @RequestBody Map<String, String> payload) {
+        String message = payload.get("message");
+        String stan = "unknown";
+        
+        // Extract STAN for correlation
+        try {
+            Iso8583Message parsedMsg = Iso8583Parser.parseMessage(message);
+            stan = parsedMsg.getField(11) != null ? parsedMsg.getField(11) : "unknown";
+        } catch (Exception e) {
+            // Continue with unknown STAN if parsing fails
+        }
+        
         Span span = tracer.spanBuilder("http.request.send_message")
                 .setAttribute("http.method", "POST")
                 .setAttribute("connection.id", connectionId)
+                .setAttribute("iso8583.stan", stan)
+                .setAttribute("iso8583.correlation_id", stan)
                 .startSpan();
         
         try (Scope scope = span.makeCurrent()) {
-            String message = payload.get("message");
             span.setAttribute("message.content", message != null ? message.substring(0, Math.min(message.length(), 100)) : "null");
             
             String[] result = connectionService.sendMessage(connectionId, message);
