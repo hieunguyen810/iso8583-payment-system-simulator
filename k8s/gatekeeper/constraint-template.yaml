@@ -1,0 +1,38 @@
+apiVersion: templates.gatekeeper.sh/v1beta1
+kind: ConstraintTemplate
+metadata:
+  name: iso8583security
+spec:
+  crd:
+    spec:
+      names:
+        kind: Iso8583Security
+      validation:
+        type: object
+        properties:
+          requiredLabels:
+            type: array
+            items:
+              type: string
+  targets:
+    - target: admission.k8s.gatekeeper.sh
+      rego: |
+        package iso8583security
+
+        violation[{"msg": msg}] {
+          required := input.parameters.requiredLabels
+          provided := input.review.object.metadata.labels
+          missing := required[_]
+          not provided[missing]
+          msg := sprintf("Missing required label: %v", [missing])
+        }
+
+        violation[{"msg": msg}] {
+          input.review.object.spec.containers[_].securityContext.runAsRoot == true
+          msg := "Containers must not run as root"
+        }
+
+        violation[{"msg": msg}] {
+          input.review.object.spec.containers[_].securityContext.privileged == true
+          msg := "Privileged containers are not allowed"
+        }

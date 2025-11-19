@@ -1,0 +1,12 @@
+apiVersion: constraints.gatekeeper.sh/v1beta1
+kind: Iso8583Security
+metadata:
+  name: iso8583-security-policy
+spec:
+  match:
+    kinds:
+      - apiGroups: ["apps"]
+        kinds: ["Deployment"]
+    namespaces: ["iso8583-demo"]
+  parameters:
+    requiredLabels: ["app", "version", "component"]
