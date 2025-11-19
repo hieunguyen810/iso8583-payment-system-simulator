@@ -7,7 +7,8 @@ spec:
   selector:
     app: simulator
   ports:
-  - port: 8084
+  - name: iso 
+    port: 8084
     targetPort: 8084
     protocol: TCP
   type: ClusterIP

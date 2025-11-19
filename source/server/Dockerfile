@@ -6,7 +6,7 @@ USER spring:spring
 
 WORKDIR /app
 
-COPY /target/client*.jar app.jar
+COPY /target/server*.jar app.jar
 
 EXPOSE 8080
 

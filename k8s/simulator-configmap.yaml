@@ -4,5 +4,5 @@ metadata:
   name: simulator-config
   namespace: default
 data:
-  GRPC_SERVER_HOST: "server-service"
+  GRPC_SERVER_HOST: "iso8583-service"
   GRPC_SERVER_PORT: "9090"

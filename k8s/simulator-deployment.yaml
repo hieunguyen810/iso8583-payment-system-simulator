@@ -16,6 +16,7 @@ spec:
       containers:
       - name: simulator
         image: iso8583-simulator:latest
+        imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 8084
         envFrom:

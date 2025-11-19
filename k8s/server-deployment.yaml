@@ -19,7 +19,12 @@ spec:
           image: iso-8583-server:latest
           imagePullPolicy: IfNotPresent
           ports:
+            - containerPort: 8080
+              name: http
             - containerPort: 8583
+              name: iso8583
+            - containerPort: 9090
+              name: grpc
           env:
             - name: JAVA_OPTS
               value: "-Xms256m -Xmx512m"
@@ -33,10 +38,10 @@ spec:
           readinessProbe:
             tcpSocket:
               port: 8583
-            initialDelaySeconds: 5
+            initialDelaySeconds: 15
             periodSeconds: 10
           livenessProbe:
             tcpSocket:
               port: 8583
-            initialDelaySeconds: 10
+            initialDelaySeconds: 30
             periodSeconds: 20
