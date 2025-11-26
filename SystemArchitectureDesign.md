@@ -1,4 +1,4 @@
-# DEVOPS PRACTICES
+# SYSTEM ARCHITECTURE DESIGN
 
 ### 1. Observability
 
@@ -40,6 +40,7 @@ This project focus on the high availability in the Issuer Side (usually a Bank).
 - Client and Server must maintain the persistent, bi-directional connection.
 - Server and Client should running in multiple instances to increase high availability and able to upgrade without any downtime.
 #### Solutions
+1. **Client - Server connection**: stateful
 - On Client Side:
     - Deploy on kubernetes: multi primary cluster setup with Istio.
     - Kafka Cluster
@@ -55,6 +56,19 @@ This project focus on the high availability in the Issuer Side (usually a Bank).
     - Kafka Cluster
     - When server receive a connect message from client -> produce Kafka, set current status is available. Simulator consume this topic, send message to available server only.
     - When server receive a disconnect message from client or did not receive echo message after 1 minute -> produce Kafka, set current status is unavailable. Simulator consume this topic, stop send message to this server instance.
+
+2. **Simulation to Server connection**: stateless
+    - Simulator connect to server headless service (by dns name)
+    - Simulator (grpc client side) must config loadbalancing policy
+
+3. **Client to Kafka connection**: stateless
+    - 
+
+4. **Kafka to Authorize connection**: stateless
+    - All authorize instances must use the same groud-id=authorize-service
+    - Partition distribution: topic has 3 partitions, supporting up to 3 consumer instances
+    - Each message goes to only one consumer in the group
+
 
 #### Downtime Scenerio and Resolved
 
