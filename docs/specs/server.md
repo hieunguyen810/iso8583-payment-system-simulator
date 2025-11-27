@@ -1,16 +1,5 @@
-# Demo ISO 8583 Server and Client
+# Demo ISO 8583 Server module
 
-## Project struture
-```
-src/main/java/com/example/demo/
-├── DemoApplication.java
-├── server/
-│   └── Iso8583Server.java
-├── client/  
-│   └── Iso8583Client.java
-└── model/
-    └── Iso8583Message.java
-```
 
 ## Build and start
 

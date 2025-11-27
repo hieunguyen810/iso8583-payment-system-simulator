@@ -1,4 +1,24 @@
-# OpenTelemetry Integration
+# Observability
+
+## 1.Front-End
+
+**Grafana Faro Integration**
+
+Set ```FARO_ENABLED: "true"``` to enable Grafana Faro.
+Faro will send data to Grafana Cloud. (or Alloy for local deployment)
+
+
+## 2. Spring Boot *
+
+**Actuator Integration**
+##### Server
+- Health: http://localhost:8080/actuator/health
+- Metrics: http://localhost:8080/actuator/metrics
+- Transaction Metrics:
+    - http://localhost:8080/actuator/metrics/iso8583.transactions.successful
+    - http://localhost:8080/actuator/metrics/iso8583.transactions.failed
+
+## 3. OpenTelemetry Integration
 
 The ISO 8583 client module is now integrated with OpenTelemetry for comprehensive observability.
 
