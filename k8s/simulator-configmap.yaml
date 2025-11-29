@@ -4,7 +4,7 @@ metadata:
   name: simulator-config
   namespace: default
 data:
-  grpc.client.iso8583-server.address: "dns:///server-service.default.svc.cluster.local:9090"
+  grpc.client.iso8583-server.address: "dns:///server-service-headless.default.svc.cluster.local:9090"
   grpc.client.iso8583-server.negotiationType: "plaintext"
   grpc.client.iso8583-server.defaultLoadBalancingPolicy: "round_robin"
   simulator.mode: "SCHEDULED"
