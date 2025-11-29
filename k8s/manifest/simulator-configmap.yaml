@@ -8,4 +8,5 @@ data:
   grpc.client.iso8583-server.negotiationType: "plaintext"
   grpc.client.iso8583-server.defaultLoadBalancingPolicy: "round_robin"
   simulator.mode: "SCHEDULED"
+  simulator.scheduled.interval-ms: "10"
   simulator.enabled: "true"
