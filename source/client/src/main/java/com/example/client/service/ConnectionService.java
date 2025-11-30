@@ -266,6 +266,21 @@ public class ConnectionService {
         return channel;
     }
 
+    public void broadcastToConnectedServers(String message) {
+        activeChannels.forEach((connectionId, channel) -> {
+            if (channel != null && channel.isActive()) {
+                try {
+                    ByteBuf buf = channel.alloc().buffer();
+                    buf.writeBytes(message.getBytes(StandardCharsets.UTF_8));
+                    channel.writeAndFlush(buf);
+                    System.out.println("📤 Sent to " + connectionId + ": " + message);
+                } catch (Exception e) {
+                    System.err.println("❌ Failed to send to " + connectionId + ": " + e.getMessage());
+                }
+            }
+        });
+    }
+
     private String sendAndWaitForResponse(Channel channel, String message) throws Exception {
         Span span = tracer.spanBuilder("iso8583.client.socket_send")
                 .setAttribute("channel.id", channel.id().asShortText())
