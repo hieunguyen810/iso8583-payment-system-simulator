@@ -22,13 +22,13 @@ spec:
           name: http
         env:
         - name: AUTHORIZATION_ENABLED
-          value: "false"
+          value: "true"
         - name: ISO8583_SERVER_HOST
           value: "server-service"
         - name: ISO8583_SERVER_PORT
           value: "8583"
         - name: KAFKA_BOOTSTRAP_SERVERS
-          value: "kafka:9092"
+          value: "my-cluster-kafka-bootstrap:9092"
         volumeMounts:
         - name: config-volume
           mountPath: /app/config

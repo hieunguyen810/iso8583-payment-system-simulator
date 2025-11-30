@@ -4,7 +4,7 @@ metadata:
   name: authorize
   namespace: default
 spec:
-  replicas: 3  # Matches partition count
+  replicas: 1
   selector:
     matchLabels:
       app: authorize
@@ -22,7 +22,7 @@ spec:
           name: http
         env:
         - name: KAFKA_BOOTSTRAP_SERVERS
-          value: "kafka:9092"
+          value: "my-cluster-kafka-bootstrap:9092"
         - name: SPRING_KAFKA_CONSUMER_GROUP_ID
           value: "authorize-service"
         resources:
