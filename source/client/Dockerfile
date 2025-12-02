@@ -1,13 +1,15 @@
-FROM eclipse-temurin:17-jdk-alpine
+FROM eclipse-temurin:17-jre-alpine
 
-# Create a non-root user for security
-RUN addgroup -S spring && adduser -S spring -G spring
-USER spring:spring
+RUN apk add --no-cache dumb-init && \
+    addgroup -S spring && adduser -S spring -G spring
 
 WORKDIR /app
+COPY --chown=spring:spring /target/client*.jar app.jar
 
-COPY /target/client*.jar app.jar
-
+USER spring:spring
 EXPOSE 8081
 
-ENTRYPOINT ["java","-jar","app.jar"]
+ENTRYPOINT ["dumb-init", "java", \
+    "-XX:MaxRAMPercentage=75.0", \
+    "-XX:+UseContainerSupport", \
+    "-jar", "app.jar"]
