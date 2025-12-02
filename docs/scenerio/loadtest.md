@@ -1,20 +1,21 @@
 # Load Test
 
-## Server
-*Normal*: No load
-- CPU: 5
-- Memory: 200
 
-1. **Scheduler**
-
-- 1 request/second:
-    - CPU: 8
-    - Memory: 213
-
-- 10 requests/second:
-    - CPU: 34
-    - Memory: 216
-
-- 100 requests/second:
-    - CPU: 120
-    - Memory: 220
+| Test Case | Module | CPU (m) | Memory (Mi) | Success rate (%) |
+| --------- | ------ | --- | ------ | ------------ |
+| No load | Server | 5 | 200 | | 
+|         | Client | 7 | 164 | |
+|         | Authorize | 6 | 175 | |
+|         | Kafka | 24 | 450 | |
+| 1 rps   | Server | 5 | 200 | 100 | 
+|         | Client | 7 | 164 | |
+|         | Authorize | 6 | 175 | |
+|         | Kafka | 24 | 450 | |
+| 10 rps  | Server | 5 | 200 | 100 | 
+|         | Client | 7 | 164 | |
+|         | Authorize | 6 | 175 | |
+|         | Kafka | 24 | 450 | |
+| 100 rps | Server | 71 | 200 | 100 | 
+|         | Client | 62 | 177 | |
+|         | Authorize | 25 | 175 | |
+|         | Kafka | 69 | 450 | |

@@ -1,0 +1,96 @@
+{{- if .Values.enabled }}
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "postgres.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "postgres.labels" . | nindent 4 }}
+spec:
+  serviceName: {{ include "postgres.fullname" . }}-headless
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "postgres.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "postgres.selectorLabels" . | nindent 8 }}
+    {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    spec:
+      terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds }}
+    {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+      serviceAccountName: {{ include "postgres.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      {{- if .Values.volume.enabled }}
+      volumes:
+        - name: postgres-volume
+          persistentVolumeClaim:
+            claimName: {{ include "postgres.fullname" . }}
+      {{- end }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ include "postgres.postgresVersion" . }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: postgres
+              containerPort: 5432
+              protocol: TCP
+          # livenessProbe:
+          #   successThreshold: {{ .Values.livenessProbe.successThreshold }}
+          #   failureThreshold: {{ .Values.livenessProbe.failureThreshold }}
+          #   periodSeconds: {{ .Values.livenessProbe.periodSeconds }}
+          #   timeoutSeconds: {{ .Values.livenessProbe.timeoutSeconds }}
+          #   exec:
+          #     command:
+          #     - pg_isready
+          #     - -h
+          #     - localhost
+          # readinessProbe:
+          #   successThreshold: {{ .Values.readinessProbe.successThreshold }}
+          #   failureThreshold: {{ .Values.readinessProbe.failureThreshold }}
+          #   periodSeconds: {{ .Values.readinessProbe.periodSeconds }}
+          #   timeoutSeconds: {{ .Values.readinessProbe.timeoutSeconds }}
+          #   exec:
+          #     command:
+          #     - pg_isready
+          #     - -h
+          #     - localhost
+          {{- if .Values.volume.enabled }}
+          volumeMounts:
+            - mountPath: {{ .Values.volume.mountPath | quote }}
+              name: postgres-volume
+          {{- end }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          env:
+          {{- range $key, $value := .Values.environmentVariables }}
+          - name: {{ $key }}
+            value: {{ $value | quote }}
+          {{- end }}
+          {{- if .Values.volume.enabled }}
+          - name: PGDATA
+            value: {{ .Values.volume.mountPath | quote }}
+          {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+{{- end }}

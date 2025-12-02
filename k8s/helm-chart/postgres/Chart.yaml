@@ -1,0 +1,15 @@
+apiVersion: v2
+appVersion: "13.12"
+description: Postgres helm chart for Kubernetes
+home: https://github.com/hansehe/postgres-helm
+icon: https://raw.githubusercontent.com/hansehe/postgres-helm/master/helm/postgres.png
+keywords:
+- postgres
+maintainers:
+- email: hans.erik.heggem@gmail.com
+  name: hansehe
+name: postgres
+sources:
+- https://github.com/hansehe/postgres-helm
+type: application
+version: 0.1.0
