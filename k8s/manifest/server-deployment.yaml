@@ -27,10 +27,10 @@ spec:
               name: grpc
           env:
             - name: JAVA_OPTS
-              value: "-Xms256m -Xmx512m"
+              value: "-Xms128m -Xmx512m"
           resources:
             requests:
-              memory: "256Mi"
+              memory: "128Mi"
               cpu: "100m"
             limits:
               memory: "512Mi"
