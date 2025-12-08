@@ -22,7 +22,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@SpringBootTest
+@SpringBootTest(classes = DemoApplication.class)
 @TestPropertySource(properties = {
     "app.mode=server"  // Only start server for tests
 })

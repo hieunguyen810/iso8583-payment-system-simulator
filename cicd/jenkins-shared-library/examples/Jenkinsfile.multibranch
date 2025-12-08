@@ -1,0 +1,75 @@
+@Library('iso8583-pipeline-lib') _
+
+pipeline {
+    agent any
+    
+    parameters {
+        booleanParam(name: 'FORCE_DEPLOY', defaultValue: false, description: 'Force deployment to production')
+        choice(name: 'ENVIRONMENT', choices: ['dev', 'staging', 'production'], description: 'Target environment')
+    }
+    
+    stages {
+        stage('Branch Strategy') {
+            parallel {
+                stage('Feature Branch') {
+                    when { 
+                        not { anyOf { branch 'main'; branch 'develop' } }
+                    }
+                    steps {
+                        ciPipeline([
+                            buildType: 'maven',
+                            build: [workDir: 'source'],
+                            test: [workDir: 'source', coverage: true],
+                            security: [enabled: true],
+                            sonar: [enabled: true]
+                        ])
+                    }
+                }
+                
+                stage('Develop Branch') {
+                    when { branch 'develop' }
+                    steps {
+                        ciPipeline([
+                            buildType: 'maven',
+                            build: [workDir: 'source'],
+                            test: [workDir: 'source', coverage: true],
+                            integrationTest: [enabled: true],
+                            security: [enabled: true],
+                            sonar: [enabled: true],
+                            deploy: [
+                                type: 'k8s',
+                                namespace: 'iso8583-dev',
+                                manifestPath: 'k8s/manifest/'
+                            ]
+                        ])
+                    }
+                }
+                
+                stage('Main Branch') {
+                    when { branch 'main' }
+                    steps {
+                        ciPipeline([
+                            buildType: 'maven',
+                            build: [workDir: 'source', profiles: ['production']],
+                            test: [workDir: 'source', coverage: true, parallel: true],
+                            integrationTest: [enabled: true],
+                            security: [enabled: true],
+                            sonar: [enabled: true, qualityGate: true],
+                            package: [workDir: 'source', securityScan: true],
+                            deploy: [
+                                type: 'docker',
+                                imageName: 'iso8583/payment-processor',
+                                registry: 'registry.company.com',
+                                securityScan: true,
+                                push: true
+                            ],
+                            notifications: [
+                                slack: [channel: '#production-deployments']
+                            ]
+                        ])
+                    }
+                }
+            }
+        }
+    }
+}

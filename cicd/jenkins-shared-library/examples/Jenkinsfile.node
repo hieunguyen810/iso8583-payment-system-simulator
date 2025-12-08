@@ -1,0 +1,35 @@
+@Library('iso8583-pipeline-lib') _
+
+ciPipeline([
+    buildType: 'node',
+    build: [
+        workDir: 'source/console',
+        nodeVersion: '20',
+        command: 'npm run build:production'
+    ],
+    test: [
+        workDir: 'source/console',
+        coverage: true,
+        command: 'npm run test:ci'
+    ],
+    security: [
+        enabled: true
+    ],
+    sonar: [
+        enabled: true,
+        server: 'SonarQube',
+        projectKey: 'iso8583-console'
+    ],
+    deploy: [
+        type: 'k8s',
+        namespace: 'frontend-prod',
+        manifestPath: 'k8s/manifest/console-deployment.yaml',
+        timeout: '600s',
+        dryRun: false
+    ],
+    notifications: [
+        slack: [
+            channel: '#frontend-deployments'
+        ]
+    ]
+])
