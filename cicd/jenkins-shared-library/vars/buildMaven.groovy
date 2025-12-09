@@ -3,6 +3,9 @@ def call(Map config = [:]) {
     def workDir = config.workDir ?: '.'
     def profiles = config.profiles ? "-P${config.profiles.join(',')}" : ''
     def jvmArgs = config.jvmArgs ?: '-Xmx2g -XX:+UseG1GC'
+    def clean = config.clean ?: false
+    def modules = config.modules ? "-pl ${config.modules.join(',')}" : ''
+    def alsoMake = config.alsoMake ? '-am' : ''
     
     validateConfig(config)
     
@@ -10,8 +13,11 @@ def call(Map config = [:]) {
         try {
             sh """
                 export MAVEN_OPTS="${jvmArgs}"
-                mvn clean compile ${profiles} ${skipTests ? '-DskipTests' : ''} \
-                    -Dmaven.repo.local=.m2/repository \
+                mvn ${clean ? 'clean ' : ''}compile ${profiles} ${skipTests ? '-DskipTests' : ''} \
+                    ${modules} ${alsoMake} \
+                    -T 1C \
+                    -Dmaven.compile.fork=true \
+                    -Dmaven.repo.local=/var/lib/jenkins/.m2/repository \
                     --batch-mode --no-transfer-progress
             """
         } catch (Exception e) {

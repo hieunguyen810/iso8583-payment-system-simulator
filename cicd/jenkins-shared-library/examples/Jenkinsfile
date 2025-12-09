@@ -1,0 +1,22 @@
+@Library('iso8583-pipeline-lib') _
+
+pipeline {
+    agent any
+    
+    stages {
+        stage('Checkout Code') {
+            steps {
+                git branch: 'main', credentialsId: 'your-credential', url: 'https://github.com/hieunguyen810/iso8583-payment-system-simulator.git'
+            }
+        }
+        stage('Build') {
+            steps {
+                buildMaven([
+                    workDir: 'source', 
+                    skipTests: true, 
+                    
+                ])
+            }
+        }
+    }
+}
