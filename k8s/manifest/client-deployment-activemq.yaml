@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: client-activemq
+  labels:
+    app: client-activemq
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: client-activemq
+  template:
+    metadata:
+      labels:
+        app: client-activemq
+    spec:
+      containers:
+      - name: client
+        image: iso8583-client-activemq:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8081
+        env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: "activemq"
+        - name: SPRING_ACTIVEMQ_BROKER_URL
+          value: "tcp://activemq-service:61616"
+        - name: ISO8583_CLIENT_AUTHORIZATION_ENABLED
+          value: "true"
+        - name: ISO8583.CLIENT.AUTHORIZATION.ENABLED
+          value: "true"
+        - name: JAVA_OPTS
+          value: "-Xms128m -Xmx384m -XX:+UseG1GC"
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "200m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"

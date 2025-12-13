@@ -2,12 +2,12 @@ package com.example.common;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.context.ConfigurableApplicationContext;
 
 @SpringBootApplication
-public class DemoApplication {
+public class CommonApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(DemoApplication.class, args);
+        System.out.println("📦 Starting ISO 8583 Common Module...");
+        SpringApplication.run(CommonApplication.class, args);
     }
 }

@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: authorize-service
+spec:
+  selector:
+    app: authorize-activemq
+  ports:
+  - port: 8082
+    targetPort: 8082
+  type: ClusterIP

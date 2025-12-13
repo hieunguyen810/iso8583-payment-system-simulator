@@ -1,5 +1,7 @@
 package com.example.client.config;
 
+import org.springframework.context.annotation.Profile;
+
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
@@ -18,6 +20,7 @@ import java.util.Map;
 @Configuration
 @EnableKafka
 @ConditionalOnProperty(name = "iso8583.client.authorization.enabled", havingValue = "true")
+@Profile("!activemq")
 public class KafkaConfig {
 
     @Value("${spring.kafka.bootstrap-servers:localhost:9092}")

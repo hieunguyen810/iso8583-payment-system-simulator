@@ -5,12 +5,14 @@ import com.example.common.parser.Iso8583Parser;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.context.annotation.Profile;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Random;
 
 @Service
+@Profile("!activemq")
 public class AuthorizationService {
 
     private final KafkaTemplate<String, String> kafkaTemplate;

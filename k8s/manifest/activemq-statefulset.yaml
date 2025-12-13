@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: activemq
+spec:
+  serviceName: activemq-headless
+  replicas: 1
+  selector:
+    matchLabels:
+      app: activemq
+  template:
+    metadata:
+      labels:
+        app: activemq
+    spec:
+      containers:
+      - name: activemq
+        image: apache/activemq-classic:5.18.3
+        ports:
+        - containerPort: 61616
+        - containerPort: 8161
+        env:
+        - name: ACTIVEMQ_CONFIG_MINMEMORY
+          value: "64"
+        - name: ACTIVEMQ_CONFIG_MAXMEMORY
+          value: "256"
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        volumeMounts:
+        - name: activemq-data
+          mountPath: /opt/apache-activemq/data
+  volumeClaimTemplates:
+  - metadata:
+      name: activemq-data
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      resources:
+        requests:
+          storage: 1Gi

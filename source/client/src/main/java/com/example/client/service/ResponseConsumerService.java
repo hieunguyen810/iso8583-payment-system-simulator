@@ -1,5 +1,7 @@
 package com.example.client.service;
 
+import org.springframework.context.annotation.Profile;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,6 +11,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 @ConditionalOnProperty(name = "iso8583.client.authorization.enabled", havingValue = "true")
+@Profile("!activemq")
 public class ResponseConsumerService {
 
     private final ObjectMapper objectMapper = new ObjectMapper();

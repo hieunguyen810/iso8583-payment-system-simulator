@@ -2,13 +2,10 @@ apiVersion: v1
 kind: Service
 metadata:
   name: client-service
-  namespace: default
 spec:
   selector:
-    app: client
+    app: client-activemq
   ports:
-  - name: http
-    port: 8081
+  - port: 8081
     targetPort: 8081
-    protocol: TCP
   type: ClusterIP
