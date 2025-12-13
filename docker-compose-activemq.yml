@@ -1,0 +1,82 @@
+version: '3.8'
+
+services:
+  # ActiveMQ - Much lighter than Kafka
+  activemq:
+    image: apache/activemq-classic:5.18.3
+    ports:
+      - "61616:61616"  # JMS port
+      - "8161:8161"    # Web console
+    environment:
+      ACTIVEMQ_CONFIG_NAME: amq
+      ACTIVEMQ_CONFIG_DEFAULTACCOUNT: false
+      ACTIVEMQ_ADMIN_LOGIN: admin
+      ACTIVEMQ_ADMIN_PASSCODE: admin
+      ACTIVEMQ_CONFIG_MINMEMORY: 64
+      ACTIVEMQ_CONFIG_MAXMEMORY: 256
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '0.5'
+        reservations:
+          memory: 256M
+          cpus: '0.25'
+    volumes:
+      - activemq-data:/opt/apache-activemq/data
+
+  # PostgreSQL - lightweight config
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: iso8583
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5432:5432"
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.5'
+        reservations:
+          memory: 128M
+          cpus: '0.25'
+    command: >
+      postgres
+      -c shared_buffers=64MB
+      -c effective_cache_size=128MB
+      -c maintenance_work_mem=16MB
+      -c checkpoint_completion_target=0.9
+      -c wal_buffers=4MB
+      -c default_statistics_target=100
+      -c random_page_cost=1.1
+      -c effective_io_concurrency=200
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+  # Grafana - minimal setup
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_INSTALL_PLUGINS=""
+      - GF_ANALYTICS_REPORTING_ENABLED=false
+      - GF_ANALYTICS_CHECK_FOR_UPDATES=false
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.5'
+        reservations:
+          memory: 128M
+          cpus: '0.25'
+    volumes:
+      - grafana-storage:/var/lib/grafana
+
+volumes:
+  activemq-data:
+  postgres-data:
+  grafana-storage:

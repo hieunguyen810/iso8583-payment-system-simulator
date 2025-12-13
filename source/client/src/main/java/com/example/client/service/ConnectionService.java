@@ -24,6 +24,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.core.env.Environment;
+import org.springframework.jms.core.JmsTemplate;
+import java.util.Arrays;
 
 import jakarta.annotation.PostConstruct;
 
@@ -192,6 +195,12 @@ public class ConnectionService {
     @Autowired(required = false)
     private KafkaTemplate<String, String> kafkaTemplate;
     
+    @Autowired(required = false)
+    private JmsTemplate jmsTemplate;
+    
+    @Autowired
+    private Environment environment;
+    
     @Value("${iso8583.client.authorization.enabled:false}")
     private boolean authorizationEnabled;
     
@@ -221,7 +230,21 @@ public class ConnectionService {
                 throw new RuntimeException("Invalid message: " + String.join(", ", validation.getErrors()));
             }
             
-            if (authorizationEnabled && kafkaTemplate != null) {
+            boolean isActiveMQProfile = Arrays.asList(environment.getActiveProfiles()).contains("activemq");
+            System.out.println("🔍 Debug - authorizationEnabled: " + authorizationEnabled + ", isActiveMQProfile: " + isActiveMQProfile + ", jmsTemplate: " + (jmsTemplate != null));
+            if (authorizationEnabled && isActiveMQProfile && jmsTemplate != null) {
+                // Send to ActiveMQ for authorization
+                System.out.println("📤 Sending to ActiveMQ for authorization");
+                jmsTemplate.convertAndSend("iso8583.requests", message);
+                
+                messageCounter.add(1, io.opentelemetry.api.common.Attributes.of(
+                    io.opentelemetry.api.common.AttributeKey.stringKey("connection.id"), connectionId,
+                    io.opentelemetry.api.common.AttributeKey.stringKey("message.type"), "activemq"
+                ));
+                
+                span.setStatus(StatusCode.OK);
+                return new String[]{message, "Sent to ActiveMQ authorization service"};
+            } else if (authorizationEnabled && kafkaTemplate != null && !isActiveMQProfile) {
                 // Send to Kafka for authorization with field 37 as partition key for load balancing
                 String partitionKey = parsedMsg.getField(37);
                 if (partitionKey == null) partitionKey = connectionId;
@@ -236,7 +259,7 @@ public class ConnectionService {
                 ));
                 
                 span.setStatus(StatusCode.OK);
-                return new String[]{message, "Sent to authorization service"};
+                return new String[]{message, "Sent to Kafka authorization service"};
             } else {
                 // Direct send to server
                 Channel channel = getActiveChannel(connectionId);
@@ -345,7 +368,11 @@ public class ConnectionService {
                 // This is a response to our request
                 future.complete(message);
                 ctx.channel().attr(AttributeKey.valueOf("responseFuture")).set(null);
-            } else if (authorizationEnabled && kafkaTemplate != null) {
+            } else if (authorizationEnabled && Arrays.asList(environment.getActiveProfiles()).contains("activemq") && jmsTemplate != null) {
+                // This is an unsolicited message from server - send to ActiveMQ for authorization
+                System.out.println("📤 Sending unsolicited message to ActiveMQ");
+                jmsTemplate.convertAndSend("iso8583.requests", message);
+            } else if (authorizationEnabled && kafkaTemplate != null && !Arrays.asList(environment.getActiveProfiles()).contains("activemq")) {
                 // This is an unsolicited message from server - send to Kafka for authorization
                 Iso8583Message parsedMsg = Iso8583Parser.parseMessage(message);
                 String partitionKey = parsedMsg.getField(37);
