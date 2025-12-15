@@ -6,6 +6,5 @@ metadata:
 data:
   API_BASE_URL: "http://iso8583-client.local:80/api/iso8583"
   FARO_URL: "http://faro.local:12347/collect"
-  METRICS_URL: "http://faro.local:12348/v1/metrics"
   FARO_ENABLED: "true"
   ENVIRONMENT: "production"

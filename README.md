@@ -26,7 +26,8 @@ This project simulate the ISO-8583 transaction flow. Contain common domains: iss
 - Prometheus (optional)
 - Tempo (optional)
 - Open telemetry (optional)
-- Grafana Faro (optional)
+- Grafana Cloud (optional)
+- Alloy (optional)
 
 ## Usage
 **1. Localhost deployment:**

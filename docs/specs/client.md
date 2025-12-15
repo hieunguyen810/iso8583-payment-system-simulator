@@ -9,7 +9,7 @@ The Client module serves as the REST API gateway and connection manager for ISO 
 ### Technology Stack
 - **Framework**: Spring Boot 3.x
 - **Networking**: Netty (async socket client)
-- **Messaging**: Apache Kafka (optional)
+- **Messaging**: Apache Kafka/ActiveMQ
 - **Observability**: OpenTelemetry, Micrometer
 - **Runtime**: Java 17
 

@@ -8,7 +8,7 @@ The Authorize module is a Kafka-based microservice that processes ISO 8583 autho
 
 ### Technology Stack
 - **Framework**: Spring Boot 3.x
-- **Messaging**: Apache Kafka
+- **Messaging**: Apache Kafka/ActiveMQ
 - **Runtime**: Java 17
 - **Container**: Docker with Alpine Linux
 - **Observability**: OpenTelemetry
