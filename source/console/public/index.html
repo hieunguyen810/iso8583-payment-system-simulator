@@ -12,8 +12,9 @@
         // Fallback configuration for local development
         window.APP_CONFIG = window.APP_CONFIG || {
             API_BASE_URL: 'http://localhost:8081/api/iso8583',
-            FARO_URL: 'https://faro-collector-prod-ap-southeast-1.grafana.net/collect/<app_key>',
-            FARO_ENABLED: false,
+            FARO_URL: 'http://localhost:12347/collect',
+            METRICS_URL: 'http://localhost:12348/v1/metrics',
+            FARO_ENABLED: true,
             ENVIRONMENT: 'development'
         };
     </script>

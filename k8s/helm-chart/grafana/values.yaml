@@ -655,7 +655,33 @@ plugins: []
 ## Configure grafana datasources
 ## ref: http://docs.grafana.org/administration/provisioning/#datasources
 ##
-datasources: {}
+datasources:
+  datasources.yaml:
+    apiVersion: 1
+    datasources:
+    - name: Prometheus
+      type: prometheus
+      url: http://prometheus-server:80
+      access: proxy
+      isDefault: true
+      editable: true
+    - name: Loki
+      type: loki
+      url: http://loki:3100
+      access: proxy
+      editable: true
+    - name: Tempo
+      type: tempo
+      url: http://tempo:3100
+      access: proxy
+      editable: true
+      jsonData:
+        tracesToLogs:
+          datasourceUid: loki
+        tracesToMetrics:
+          datasourceUid: prometheus
+        serviceMap:
+          datasourceUid: prometheus
 #  datasources.yaml:
 #    apiVersion: 1
 #    datasources:
@@ -791,7 +817,18 @@ notifiers: {}
 ##
 ## `path` must be /var/lib/grafana/dashboards/<provider_name>
 ##
-dashboardProviders: {}
+dashboardProviders:
+  dashboardproviders.yaml:
+    apiVersion: 1
+    providers:
+    - name: 'default'
+      orgId: 1
+      folder: ''
+      type: file
+      disableDeletion: false
+      editable: true
+      options:
+        path: /var/lib/grafana/dashboards/default
 #  dashboardproviders.yaml:
 #    apiVersion: 1
 #    providers:
@@ -810,7 +847,10 @@ dashboardProviders: {}
 ##
 ## dashboards per provider, use provider name as key.
 ##
-dashboards: {}
+dashboards:
+  default:
+    console-telemetry:
+      file: dashboards/console-telemetry.json
   # default:
   #   some-dashboard:
   #     json: |

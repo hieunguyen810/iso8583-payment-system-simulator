@@ -5,7 +5,7 @@ WORKDIR /app
 
 COPY package*.json ./
 
-RUN npm ci --only=production=false && \
+RUN npm install && \
     npm cache clean --force
 
 # Copy source files

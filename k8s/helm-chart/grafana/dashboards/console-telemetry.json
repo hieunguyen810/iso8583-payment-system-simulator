@@ -1,0 +1,100 @@
+{
+  "dashboard": {
+    "id": null,
+    "title": "ISO8583 Console Telemetry",
+    "tags": ["iso8583", "console", "frontend"],
+    "style": "dark",
+    "timezone": "browser",
+    "panels": [
+      {
+        "id": 1,
+        "title": "Console Logs",
+        "type": "logs",
+        "targets": [
+          {
+            "expr": "{app=\"console\"}",
+            "refId": "A",
+            "datasource": {
+              "type": "loki",
+              "uid": "loki"
+            }
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 24,
+          "x": 0,
+          "y": 0
+        }
+      },
+      {
+        "id": 2,
+        "title": "Frontend Traces",
+        "type": "traces",
+        "targets": [
+          {
+            "query": "{service.name=\"iso8583-console\"}",
+            "refId": "A",
+            "datasource": {
+              "type": "tempo",
+              "uid": "tempo"
+            }
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 24,
+          "x": 0,
+          "y": 8
+        }
+      },
+      {
+        "id": 3,
+        "title": "Page Load Times",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, rate(faro_page_load_duration_seconds_bucket[5m]))",
+            "refId": "A",
+            "datasource": {
+              "type": "prometheus",
+              "uid": "prometheus"
+            }
+          }
+        ],
+        "gridPos": {
+          "h": 4,
+          "w": 12,
+          "x": 0,
+          "y": 16
+        }
+      },
+      {
+        "id": 4,
+        "title": "Error Rate",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "rate(faro_errors_total[5m])",
+            "refId": "A",
+            "datasource": {
+              "type": "prometheus",
+              "uid": "prometheus"
+            }
+          }
+        ],
+        "gridPos": {
+          "h": 4,
+          "w": 12,
+          "x": 12,
+          "y": 16
+        }
+      }
+    ],
+    "time": {
+      "from": "now-1h",
+      "to": "now"
+    },
+    "refresh": "30s"
+  }
+}

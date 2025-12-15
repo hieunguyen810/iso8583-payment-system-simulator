@@ -13,6 +13,20 @@ otelcol.receiver.otlp "default" {
   }
 }
 
+// Faro receiver for frontend telemetry
+faro.receiver "console_frontend" {
+  server {
+    listen_address = "0.0.0.0"
+    listen_port = 12347
+    cors_allowed_origins = ["*"]
+  }
+
+  output {
+    logs = [loki.write.default.receiver]
+    traces = [otelcol.processor.batch.default.input]
+  }
+}
+
 // Batch processor
 otelcol.processor.batch "default" {
   output {
@@ -40,6 +54,13 @@ otelcol.exporter.otlp "tempo_traces" {
 prometheus.remote_write "default" {
   endpoint {
     url = "http://prometheus:9090/api/v1/write"
+  }
+}
+
+// Loki write for frontend logs
+loki.write "default" {
+  endpoint {
+    url = "http://loki:3100/loki/api/v1/push"
   }
 }
 
