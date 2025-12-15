@@ -22,11 +22,11 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@SpringBootTest(classes = DemoApplication.class)
+@SpringBootTest(classes = ServerApplication.class)
 @TestPropertySource(properties = {
     "app.mode=server"  // Only start server for tests
 })
-class DemoApplicationTests {
+class ServerApplicationTests {
 
     private static final String SERVER_HOST = "localhost";
     private static final int SERVER_PORT = 8583;

@@ -1,5 +1,7 @@
 package com.example.client.processor;
 
+import org.springframework.context.annotation.Profile;
+
 import com.example.common.model.Iso8583Message;
 import com.example.common.parser.Iso8583Parser;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -20,6 +22,7 @@ import java.util.concurrent.CompletableFuture;
 
 @Component
 @ConditionalOnProperty(name = "iso8583.client.authorization.enabled", havingValue = "true")
+@Profile("!activemq")
 public class Iso8583Processor {
 
     private static KafkaTemplate<String, String> kafkaTemplate;

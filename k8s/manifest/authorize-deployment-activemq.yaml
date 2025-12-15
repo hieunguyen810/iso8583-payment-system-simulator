@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: authorize-activemq
+  labels:
+    app: authorize-activemq
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: authorize-activemq
+  template:
+    metadata:
+      labels:
+        app: authorize-activemq
+    spec:
+      containers:
+      - name: authorize
+        image: iso8583-authorize-activemq:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8082
+        env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: "activemq"
+        - name: SPRING_ACTIVEMQ_BROKER_URL
+          value: "tcp://activemq-service:61616"
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "300m"
