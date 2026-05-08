@@ -30,3 +30,14 @@
 - DB monitor
 
 #### Database CICD
+
+#### Settement side
+- Folder sharing solution: S3/Minio, Ldap
+
+#### Terraform: 
+- Deploy on Floci
+- Start app
+- Run performance test
+- Destroy app
+
+#### AI integration
